@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draftwise — Student Writing Refiner</title>
+<style>
+:root{--ink:#202c27;--muted:#75817b;--line:#e7ebe7;--bg:#f5f7f4;--green:#205c48;--amber:#f5efe0;--serif:Georgia,"Times New Roman",serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.top{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(5vw,24px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--green);display:grid;place-items:center;color:#fff;font:20px var(--serif)}
+.tag{font-size:12px;color:var(--muted);background:#f5f7f4;border:1px solid var(--line);padding:6px 11px;border-radius:99px}
+.wrap{max-width:1100px;margin:46px auto;padding:0 24px}
+.intro{display:flex;justify-content:space-between;align-items:end;margin-bottom:25px}
+.eyebrow{text-transform:uppercase;letter-spacing:1.7px;color:var(--green);font-size:11px;font-weight:700}
+h1{font:42px/1.1 var(--serif);letter-spacing:-1.2px;margin:8px 0}
+.intro p{color:var(--muted);margin:0}
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:420px;box-shadow:0 5px 24px #24362a08}
+.card-head{height:56px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.label{font-size:12px;font-weight:700;letter-spacing:.45px}
+.sub{font-size:11px;color:var(--muted);margin-left:8px}
+.counter,.status{font-size:11px;color:var(--muted)}
+textarea#draft{resize:vertical;width:100%;height:290px;border:0;outline:0;padding:20px;font:15px/1.8 inherit}
+.textarea-foot{border-top:1px solid var(--line);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.controls{display:flex;gap:8px;align-items:center}
+select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--ink);font:12px inherit}
+.btn{border:0;background:var(--green);color:#fff;border-radius:8px;padding:9px 14px;font-weight:650;cursor:pointer}
+.output{padding:20px;min-height:290px;font:15px/1.85 var(--serif);white-space:pre-wrap;overflow-wrap:anywhere}
+.placeholder{color:#9aa39d;font:14px/1.7 system-ui}
+.added{background:#e4f3e7;text-decoration:underline;text-decoration-color:#66a27a}
+.removed{background:#fbe8e5;color:#a35d53;text-decoration:line-through}
+.out-foot{border-top:1px solid var(--line);padding:12px 18px;min-height:44px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px}
+.legend,.actions{display:flex;gap:10px;align-items:center}
+.key{display:flex;align-items:center;gap:5px}
+.swatch{width:9px;height:9px;border-radius:2px}
+.small-btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;cursor:pointer;color:var(--ink);font-size:11px}
+.small-btn:disabled{opacity:.5;cursor:default}
+.suggestions{margin-top:17px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:none}
+.sugg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.count-pill{background:var(--amber);color:#836a34;padding:3px 8px;border-radius:99px;font-size:10px}
+.sugg-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.suggestion{border-left:2px solid #b9d0bf;padding:2px 10px;color:#526058;font-size:12px}
+.footnote{text-align:center;color:#98a19b;font-size:11px;margin:24px 0 35px}
+@media(max-width:760px){.wrap{margin:30px auto}.intro{align-items:start;gap:16px;flex-direction:column}h1{font-size:36px}.workspace{grid-template-columns:1fr}.card{min-height:360px}textarea#draft,.output{height:250px;min-height:250px}.sugg-list{grid-template-columns:1fr}.tag{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">d</span>draftwise</div>
+  <span class="tag">Local editing · No API required</span>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <div>
+      <div class="eyebrow">Write with confidence</div>
+      <h1>Make your ideas clearer.</h1>
+      <p>Refine your writing while keeping your meaning and your voice.</p>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <section class="card">
+      <div class="card-head">
+        <div><span class="label">YOUR DRAFT</span><span class="sub">Paste or write below</span></div>
+        <span id="wordCount" class="counter">0 words</span>
+      </div>
+      <textarea id="draft" placeholder="Start with a paragraph from your essay, report, or assignment…" spellcheck="true"></textarea>
+      <div class="textarea-foot">
+        <div class="controls">
+          <select id="tone">
+            <option value="academic">Academic</option>
+            <option value="clear">Clear &amp; concise</option>
+            <option value="formal">Formal</option>
+            <option value="natural">Natural</option>
+          </select>
+          <select id="level">
+            <option value="light">Light edit</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="thorough">Thorough edit</option>
+          </select>
+        </div>
+        <button class="btn" id="refine">Refine draft →</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div><span class="label">REFINED VERSION</span><span class="sub">Changes are highlighted</span></div>
+        <span id="status" class="status">Ready when you are</span>
+      </div>
+      <div class="output" id="output"><span class="placeholder">Your improved draft will appear here, with edits highlighted so you can review every change.</span></div>
+      <div class="out-foot">
+        <div class="legend">
+          <span class="key"><i class="swatch" style="background:#bfe1c6"></i>Added or revised</span>
+          <span class="key"><i class="swatch" style="background:#f2c8c2"></i>Removed</span>
+        </div>
+        <div class="actions">
+          <button class="small-btn" id="copy" disabled>Copy text</button>
+          <button class="small-btn" id="replace" disabled>Use as draft</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="suggestions" id="suggestions">
+    <div class="sugg-head">
+      <strong>Suggestions to strengthen your writing</strong>
+      <span id="suggCount" class="count-pill">0 suggestions</span>
+    </div>
+    <div id="suggList" class="sugg-list"></div>
+  </section>
+  <p class="footnote">Suggestions are generated locally in your browser. Review edits to make sure they reflect your meaning and assignment requirements.</p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let refined = "";
+
+$("draft").addEventListener("input", () => {
+  const count = $("draft").value.trim().split(/\s+/).filter(Boolean).length;
+  $("wordCount").textContent = count + (count === 1 ? " word" : " words");
+});
+
+function escapeHTML(text) {
+  return text.replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+}
+
+function highlightChanges(oldText, newText) {
+  const oldWords = oldText.split(/(\s+)/);
+  const newWords = newText.split(/(\s+)/);
+  const n = oldWords.length, m = newWords.length;
+  if (n * m > 1000000) return escapeHTML(newText);
+
+  const table = Array.from({length:n+1}, () => new Uint32Array(m+1));
+  for (let i=n-1; i>=0; i--) {
+    for (let j=m-1; j>=0; j--) {
+      table[i][j] = oldWords[i] === newWords[j]
+        ? table[i+1][j+1] + 1
+        : Math.max(table[i+1][j], table[i][j+1]);
+    }
+  }
+
+  let i=0, j=0, html="";
+  while (i<n || j<m) {
+    if (i<n && j<m && oldWords[i] === newWords[j]) {
+      html += escapeHTML(newWords[j]); i++; j++;
+    } else if (j<m && (i===n || table[i][j+1] >= table[i+1][j])) {
+      html += '<mark class="added">' + escapeHTML(newWords[j++]) + '</mark>';
+    } else {
+      html += '<del class="removed">' + escapeHTML(oldWords[i++]) + '</del>';
+    }
+  }
+  return html;
+}
+
+function refineLocally(source) {
+  let text = source.replace(/\s+/g, " ").trim();
+  const suggestions = [];
+
+  function replace(pattern, replacement, suggestion) {
+    if (pattern.test(text)) {
+      text = text.replace(pattern, replacement);
+      suggestions.push(suggestion);
+    }
+  }
+
+  replace(/\bi\b/g, "I", "Capitalized the pronoun “I”.");
+  replace(/\bteh\b/gi, "the", "Corrected a common spelling error.");
+  replace(/\brecieve\b/gi, "receive", "Corrected a common spelling error.");
+  replace(/\bdont\b/gi, "don't", "Added a missing apostrophe.");
+  replace(/\bcant\b/gi, "can't", "Added a missing apostrophe.");
+  replace(/\bdoesnt\b/gi, "doesn't", "Added a missing apostrophe.");
+  replace(/\bdidnt\b/gi, "didn't", "Added a missing apostrophe.");
+  replace(/\btheyre\b/gi, "they're", "Added a missing apostrophe.");
+
+  if (["academic", "formal"].includes($("tone").value)) {
+    replace(/\ba lot of\b/gi, "many", "Replaced informal wording with a more academic alternative.");
+    replace(/\bget\b/gi, "obtain", "Replaced a conversational verb with a more formal one.");
+    replace(/\bshows\b/gi, "demonstrates", "Adjusted wording to a more academic tone.");
+  }
+
+  if ($("level").value === "thorough") {
+    replace(/\bvery important\b/gi, "essential", "Tightened an emphatic phrase.");
+    replace(/\bbecause of the fact that\b/gi, "because", "Made a wordy phrase more concise.");
+  }
+
+  text = text.replace(/(^|[.!?]\s+)([a-z])/g, (match, prefix, letter) => prefix + letter.toUpperCase());
+  text = text.replace(/\s+([,.!?;:])/g, "$1").replace(/([,.!?;:])(?=[A-Za-z])/g, "$1 ");
+
+  if (source !== text && suggestions.length === 0) {
+    suggestions.push("Cleaned up spacing and sentence capitalization.");
+  }
+  if (suggestions.length === 0) {
+    suggestions.push("Your grammar and mechanics look clean.");
+  }
+  if (suggestions.length < 3) suggestions.push("Check that each paragraph has one clear main idea.");
+  if (suggestions.length < 3) suggestions.push("Use specific examples or evidence to support key claims.");
+
+  return {text, suggestions: suggestions.slice(0, 3)};
+}
+
+$("refine").addEventListener("click", () => {
+  const source = $("draft").value.trim();
+  if (!source) {
+    $("status").textContent = "Add your draft first";
+    return;
+  }
+
+  const button = $("refine");
+  button.disabled = true;
+  button.textContent = "Refining…";
+  $("status").textContent = "Checking grammar and clarity…";
+  $("suggestions").style.display = "none";
+
+  window.setTimeout(() => {
+    const result = refineLocally(source);
+    refined = result.text;
+    $("output").innerHTML = highlightChanges(source, refined);
+    $("copy").disabled = $("replace").disabled = false;
+    $("status").textContent = "Local refinement complete";
+    $("suggestions").style.display = "block";
+    $("suggCount").textContent = result.suggestions.length + " suggestions";
+    $("suggList").innerHTML = result.suggestions
+      .map(item => '<div class="suggestion">' + escapeHTML(item) + '</div>')
+      .join("");
+    button.disabled = false;
+    button.textContent = "Refine draft →";
+  }, 180);
+});
+
+$("copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(refined);
+    $("copy").textContent = "Copied!";
+    setTimeout(() => $("copy").textContent = "Copy text", 1300);
+  } catch {
+    $("status").textContent = "Clipboard unavailable; select and copy the text.";
+  }
+});
+
+$("replace").addEventListener("click", () => {
+  $("draft").value = refined;
+  $("draft").dispatchEvent(new Event("input"));
+  $("status").textContent = "Draft updated";
+});
+</script>
+</body>
+</html>
